@@ -108,7 +108,7 @@ By Bayes’ theorem:
 
 $$
 \mathbb{P}(\boldsymbol{\mu}, \mathbf{D}, \mathbf{C} \mid \mathbf{Y}) =
-\frac{\mathbb{P}(\mathbf{Y} \mid \boldsymbol{\mu}, \mathbf{D}, \mathbf{C}),\mathbb{P}(\boldsymbol{\mu}, \mathbf{D}, \mathbf{C})}{\mathbb{P}(\mathbf{Y})}
+\frac{\mathbb{P}(\mathbf{Y} \mid \boldsymbol{\mu}, \mathbf{D}, \mathbf{C}) \mathbb{P}(\boldsymbol{\mu}, \mathbf{D}, \mathbf{C})}{\mathbb{P}(\mathbf{Y})}
 $$
 
 The marginal likelihood requires a high-dimensional integral:
@@ -162,12 +162,15 @@ $$
 
 ---
 
-MCMC algorithms take samples:
+MCMC algorithms generate a Markov chain with states:
 $$
 x^{(1)}, x^{(2)}, \dots, x^{(K)}
 $$
 
-from the unnormalized target density $\gamma(x)$
+which (after burn-in) are treated as samples from the target distribution
+$$
+\mathbb{P}(x \mid \mathbf{Y}) \propto \gamma(x).
+$$
 
 All MCMC algorithms:
 
@@ -416,8 +419,6 @@ Examples: SplitMix, MurmurHash, xxHash
     * e.g. randomly selecting which chains exchange states at each iteration
   * Stochastic aggregation
     * e.g. combining chain statistics using random weights or Monte Carlo estimates
-  * Uncorrected data-dependent resampling
-    * e.g. resampling chains based on empirical performance without a fixed rule
 
 ---
 

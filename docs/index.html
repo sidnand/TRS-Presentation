@@ -237,7 +237,7 @@ Siddharth Nand
 <p>By Bayes’ theorem:</p>
 <p><span class="math display">\[
 \mathbb{P}(\boldsymbol{\mu}, \mathbf{D}, \mathbf{C} \mid \mathbf{Y}) =
-\frac{\mathbb{P}(\mathbf{Y} \mid \boldsymbol{\mu}, \mathbf{D}, \mathbf{C}),\mathbb{P}(\boldsymbol{\mu}, \mathbf{D}, \mathbf{C})}{\mathbb{P}(\mathbf{Y})}
+\frac{\mathbb{P}(\mathbf{Y} \mid \boldsymbol{\mu}, \mathbf{D}, \mathbf{C}) \mathbb{P}(\boldsymbol{\mu}, \mathbf{D}, \mathbf{C})}{\mathbb{P}(\mathbf{Y})}
 \]</span></p>
 <p>The marginal likelihood requires a high-dimensional integral:</p>
 <p><span class="math display">\[
@@ -277,10 +277,12 @@ Z = \mathbb{P}(\mathbf{Y}) = \int \gamma(x), dx
 </section>
 <section class="slide level2">
 
-<p>MCMC algorithms take samples: <span class="math display">\[
+<p>MCMC algorithms generate a Markov chain with states: <span class="math display">\[
 x^{(1)}, x^{(2)}, \dots, x^{(K)}
 \]</span></p>
-<p>from the unnormalized target density <span class="math inline">\(\gamma(x)\)</span></p>
+<p>which (after burn-in) are treated as samples from the target distribution <span class="math display">\[
+\mathbb{P}(x \mid \mathbf{Y}) \propto \gamma(x).
+\]</span></p>
 <p>All MCMC algorithms:</p>
 <ul>
 <li>differ in their <strong>randomized mechanisms</strong> for proposing new samples</li>
@@ -521,10 +523,6 @@ x_{t+1}^{(m)} = \Phi_m\!\big(x_t^{(m)},\, X_{-m}^{(t)},\, u_t^{(m)}\big)
 <li>Stochastic aggregation
 <ul>
 <li>e.g.&nbsp;combining chain statistics using random weights or Monte Carlo estimates</li>
-</ul></li>
-<li>Uncorrected data-dependent resampling
-<ul>
-<li>e.g.&nbsp;resampling chains based on empirical performance without a fixed rule</li>
 </ul></li>
 </ul></li>
 </ul>
