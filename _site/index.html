@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-html/tabby.min.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/light-border.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-ed96de9b727972fe78a7b5d16c58bf87.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.8.27">
+
+  <meta name="author" content="Siddharth Nand">
+  <title>Deterministic and Reproducible Parallel Markov-Chain Monte Carlo</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="site_libs/revealjs/dist/reset.css">
+  <link rel="stylesheet" href="site_libs/revealjs/dist/reveal.css">
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+      vertical-align: middle;
+    }
+    /* CSS for citations */
+    div.csl-bib-body { }
+    div.csl-entry {
+      clear: both;
+      margin-bottom: 0em;
+    }
+    .hanging-indent div.csl-entry {
+      margin-left:2em;
+      text-indent:-2em;
+    }
+    div.csl-left-margin {
+      min-width:2em;
+      float:left;
+    }
+    div.csl-right-inline {
+      margin-left:2em;
+      padding-left:1em;
+    }
+    div.csl-indent {
+      margin-left: 2em;
+    }  </style>
+  <link rel="stylesheet" href="site_libs/revealjs/dist/theme/quarto-99eeafcedac04850354b682963cedae3.css">
+  <link rel="stylesheet" href="styles.css">
+  <link href="site_libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
+  <link href="site_libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
+  <link href="site_libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
+  <link href="site_libs/revealjs/plugin/reveal-chalkboard/font-awesome/css/all.css" rel="stylesheet">
+  <link href="site_libs/revealjs/plugin/reveal-chalkboard/style.css" rel="stylesheet">
+  <link href="site_libs/revealjs/plugin/quarto-support/footer.css" rel="stylesheet">
+  <style type="text/css">
+    .reveal div.sourceCode {
+      margin: 0;
+      overflow: auto;
+    }
+    .reveal div.hanging-indent {
+      margin-left: 1em;
+      text-indent: -1em;
+    }
+    .reveal .slide:not(.center) {
+      height: 100%;
+    }
+    .reveal .slide.scrollable {
+      overflow-y: auto;
+    }
+    .reveal .footnotes {
+      height: 100%;
+      overflow-y: auto;
+    }
+    .reveal .slide .absolute {
+      position: absolute;
+      display: block;
+    }
+    .reveal .footnotes ol {
+      counter-reset: ol;
+      list-style-type: none; 
+      margin-left: 0;
+    }
+    .reveal .footnotes ol li:before {
+      counter-increment: ol;
+      content: counter(ol) ". "; 
+    }
+    .reveal .footnotes ol li > p:first-child {
+      display: inline-block;
+    }
+    .reveal .slide ul,
+    .reveal .slide ol {
+      margin-bottom: 0.5em;
+    }
+    .reveal .slide ul li,
+    .reveal .slide ol li {
+      margin-top: 0.4em;
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide ul[role="tablist"] li {
+      margin-bottom: 0;
+    }
+    .reveal .slide ul li > *:first-child,
+    .reveal .slide ol li > *:first-child {
+      margin-block-start: 0;
+    }
+    .reveal .slide ul li > *:last-child,
+    .reveal .slide ol li > *:last-child {
+      margin-block-end: 0;
+    }
+    .reveal .slide .columns:nth-child(3) {
+      margin-block-start: 0.8em;
+    }
+    .reveal blockquote {
+      box-shadow: none;
+    }
+    .reveal .tippy-content>* {
+      margin-top: 0.2em;
+      margin-bottom: 0.7em;
+    }
+    .reveal .tippy-content>*:last-child {
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide > img.stretch.quarto-figure-center,
+    .reveal .slide > img.r-stretch.quarto-figure-center {
+      display: block;
+      margin-left: auto;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-left,
+    .reveal .slide > img.r-stretch.quarto-figure-left  {
+      display: block;
+      margin-left: 0;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-right,
+    .reveal .slide > img.r-stretch.quarto-figure-right  {
+      display: block;
+      margin-left: auto;
+      margin-right: 0; 
+    }
+  </style>
+</head>
+<body class="quarto-light">
+  <div class="reveal">
+    <div class="slides">
+
+<section id="title-slide" class="quarto-title-block center">
+  <h1 class="title">Deterministic and Reproducible Parallel Markov-Chain Monte Carlo</h1>
+  <p class="subtitle">With Applications to Portfolio Optimization</p>
+
+<div class="quarto-title-authors">
+<div class="quarto-title-author">
+<div class="quarto-title-author-name">
+Siddharth Nand 
+</div>
+</div>
+</div>
+
+</section>
+<section id="a-reproducibility-problem-in-parallel-inference" class="slide level2">
+<h2>A Reproducibility Problem in Parallel Inference</h2>
+<ul>
+<li>Modern decision systems rely on <strong>simulation-based inference</strong><br>
+</li>
+<li>To scale, we run <strong>many simulations in parallel</strong>, often with interaction<br>
+</li>
+<li>In practice, <strong>identical runs can produce different results</strong></li>
+</ul>
+<blockquote>
+<p>Same data. Same code. Same random seed.</p>
+<p><strong>Different outcomes.</strong></p>
+</blockquote>
+</section>
+<section id="motivation-portfolio-uncertainty-matters" class="slide level2">
+<h2>Motivation: Portfolio Uncertainty Matters</h2>
+<p>You manage a portfolio of <span class="math inline">\(N\)</span> assets.</p>
+<p>Let <span class="math inline">\(\mathbf{r}_t = (r_{1}, \dots, r_{N})\)</span> denote the vector of asset returns at time <span class="math inline">\(t\)</span>.</p>
+<p>Using <span class="math inline">\(T\)</span> periods of historical data, we observe: <span class="math display">\[
+\mathbf{Y} = \{\mathbf{r}_t\}_{t=1}^T \in \mathbb{R}^{T \times N}
+\]</span></p>
+<p><strong>Core question:</strong> How uncertain are the inputs used for portfolio construction?</p>
+</section>
+<section id="classical-meanvariance-optimization" class="slide level2">
+<h2>Classical Mean–Variance Optimization</h2>
+<p>Standard portfolio optimization solves:</p>
+<p><span class="math display">\[
+\max_{\mathbf{w}}
+\quad
+\mathbf{w}^\top \widehat{\boldsymbol{\mu}}
+-
+\frac{\gamma}{2}\,
+\mathbf{w}^\top \widehat{\boldsymbol{\Sigma}}\,\mathbf{w}
+\]</span></p>
+<p>(<em>Equation from</em> <span class="citation" data-cites="markowitz1952portfolio"><a href="#/references" role="doc-biblioref" onclick="">[1]</a></span>)</p>
+<ul>
+<li>Uses point estimates <span class="math inline">\(\widehat{\boldsymbol{\mu}}, \widehat{\boldsymbol{\Sigma}}\)</span> <span class="citation" data-cites="jobson1980estimation"><a href="#/references" role="doc-biblioref" onclick="">[2]</a></span></li>
+<li>Treats parameters as known constants</li>
+</ul>
+<p><strong>Issue:</strong> Parameter uncertainty is ignored</p>
+</section>
+<section id="bayesian-view" class="slide level2">
+<h2>Bayesian View</h2>
+<h3 id="treat-parameters-as-random-variables">Treat Parameters as Random Variables</h3>
+<ul>
+<li>Model parameters are uncertain and inferred from data<br>
+</li>
+<li>The goal is to characterize <strong>a joint distribution over parameters</strong></li>
+</ul>
+<p><span class="math display">\[
+\mathbf{r}_t \sim p(\mathbf{r}_t \mid \boldsymbol{\mu}, \boldsymbol{\Sigma}),
+\qquad
+(\boldsymbol{\mu}, \boldsymbol{\Sigma}) \sim p(\boldsymbol{\mu}, \boldsymbol{\Sigma})
+\]</span></p>
+<p><span class="math display">\[
+\boldsymbol{\Sigma} = \mathbf{D}\mathbf{C}\mathbf{D},
+\qquad
+\mathbf{D} = \mathrm{diag}(\sigma_1, \dots, \sigma_N)
+\]</span></p>
+<ul>
+<li><span class="math inline">\(\mathbf{D}\)</span>: scales (volatilities)<br>
+</li>
+<li><span class="math inline">\(\mathbf{C}\)</span>: correlation matrix</li>
+</ul>
+<p><strong>Inference state:</strong> <span class="math inline">\(x = (\boldsymbol{\mu}, \mathbf{D}, \mathbf{C})\)</span></p>
+</section>
+<section id="from-modeling-to-computation" class="slide level2">
+<h2>From Modeling to Computation</h2>
+<p>We seek the posterior distribution:</p>
+<p><span class="math display">\[
+\mathbb{P}(\boldsymbol{\mu}, \mathbf{D}, \mathbf{C} \mid \mathbf{Y})
+\]</span></p>
+<p>By Bayes’ theorem:</p>
+<p><span class="math display">\[
+\mathbb{P}(\boldsymbol{\mu}, \mathbf{D}, \mathbf{C} \mid \mathbf{Y}) =
+\frac{\mathbb{P}(\mathbf{Y} \mid \boldsymbol{\mu}, \mathbf{D}, \mathbf{C}),\mathbb{P}(\boldsymbol{\mu}, \mathbf{D}, \mathbf{C})}{\mathbb{P}(\mathbf{Y})}
+\]</span></p>
+<p>The marginal likelihood requires a high-dimensional integral:</p>
+<p><span class="math display">\[
+\mathbb{P}(\mathbf{Y}) = \int
+\mathbb{P}(\mathbf{Y} \mid \boldsymbol{\mu}, \mathbf{D}, \mathbf{C}),
+\mathbb{P}(\boldsymbol{\mu}, \mathbf{D}, \mathbf{C})
+, d\boldsymbol{\mu}, d\mathbf{D}, d\mathbf{C}
+\]</span></p>
+<blockquote>
+<p>No closed-form solution</p>
+<p>Dimension grows quickly with <span class="math inline">\(N\)</span></p>
+</blockquote>
+<p>(<em>See</em> <span class="citation" data-cites="neal1993probabilistic"><a href="#/references" role="doc-biblioref" onclick="">[3]</a></span>; <span class="citation" data-cites="robert2004monte"><a href="#/references" role="doc-biblioref" onclick="">[4]</a></span>)</p>
+</section>
+<section id="markov-chain-monte-carlo-mcmc" class="slide level2">
+<h2>Markov-Chain Monte Carlo (MCMC)</h2>
+<p>MCMC is a class of algorithms that generate samples from a posterior distribution.</p>
+<p>Define the unnormalized target density:</p>
+<p><span class="math display">\[
+\gamma(x) \equiv \mathbb{P}(\mathbf{Y} \mid x) \mathbb{P}(x),
+\quad
+x = (\boldsymbol{\mu}, \mathbf{D}, \mathbf{C})
+\]</span></p>
+<p>The normalizing constant is:</p>
+<p><span class="math display">\[
+Z = \mathbb{P}(\mathbf{Y}) = \int \gamma(x), dx
+\]</span></p>
+<p>Although <span class="math inline">\(Z\)</span> is unknown, we can compute relative posterior probabilities:</p>
+<p><span class="math display">\[
+\frac{\mathbb{P}(x' \mid \mathbf{Y})}{\mathbb{P}(x \mid \mathbf{Y})} = \frac{\gamma(x')}{\gamma(x)}
+\]</span></p>
+<p>Thus,</p>
+<p><span class="math display">\[
+\mathbb{P}(x \mid \mathbf{Y}) \propto \gamma(x)
+\]</span></p>
+<p>(<em>See</em> <span class="citation" data-cites="neal1993probabilistic"><a href="#/references" role="doc-biblioref" onclick="">[3]</a></span>)</p>
+</section>
+<section class="slide level2">
+
+<p>MCMC algorithms take samples: <span class="math display">\[
+x^{(1)}, x^{(2)}, \dots, x^{(K)}
+\]</span></p>
+<p>from the unnormalized target density <span class="math inline">\(\gamma(x)\)</span></p>
+<p>All MCMC algorithms:</p>
+<ul>
+<li>differ in their <strong>randomized mechanisms</strong> for proposing new samples</li>
+<li>define a <strong>Markov chain</strong> whose stationary distribution is the target posterior</li>
+</ul>
+<p><strong>Examples:</strong> Metropolis–Hastings, Gibbs, HMC</p>
+<p>(<em>See</em> <span class="citation" data-cites="metropolis1953equation"><a href="#/references" role="doc-biblioref" onclick="">[5]</a></span>; <span class="citation" data-cites="hastings1970monte"><a href="#/references" role="doc-biblioref" onclick="">[6]</a></span>)</p>
+</section>
+<section id="why-mcmc-is-expensive-in-practice" class="slide level2">
+<h2>Why MCMC Is Expensive in Practice</h2>
+<ul>
+<li><p><strong>High-dimensional parameter space</strong> Even a small portfolio with <span class="math inline">\(N=5\)</span> assets has:</p>
+<ul>
+<li>5 expected returns</li>
+<li>5 volatilities</li>
+<li>10 correlations → <strong>20 parameters</strong></li>
+</ul></li>
+<li><p><strong>Complex posterior geometry</strong></p>
+<ul>
+<li>Multiple modes (e.g., volatility regimes)</li>
+</ul></li>
+</ul>
+<p><strong>Result:</strong> Single chains make local moves, can get stuck, and yield unreliable uncertainty estimates. (<em>See</em> <span class="citation" data-cites="gelman2013bayesian"><a href="#/references" role="doc-biblioref" onclick="">[7]</a></span>; <span class="citation" data-cites="neal1993probabilistic"><a href="#/references" role="doc-biblioref" onclick="">[3]</a></span>)</p>
+</section>
+<section id="parallel-mcmc-the-industry-standard" class="slide level2">
+<h2>Parallel MCMC: The Industry Standard</h2>
+<p>In practice, we run multiple chains in parallel:</p>
+<p><span class="math display">\[
+{ x_1^{(1:K)}, \dots, x_M^{(1:K)} }
+\]</span></p>
+<p>(<em>See</em> <span class="citation" data-cites="gelman2013bayesian"><a href="#/references" role="doc-biblioref" onclick="">[7]</a></span>; <span class="citation" data-cites="brooks2011handbook"><a href="#/references" role="doc-biblioref" onclick="">[8]</a></span>)</p>
+<p>Parallelism provides:</p>
+<ul>
+<li>Faster computation</li>
+<li>Better exploration via multiple initializations</li>
+<li>Diagnostics (e.g., convergence checks)</li>
+</ul>
+<p>However, chains remain <strong>independent</strong>.</p>
+<blockquote>
+<p>Parallel chains help, but independence limits exploration of complex posteriors.</p>
+</blockquote>
+</section>
+<section id="interacting-mcmc" class="slide level2">
+<h2>Interacting MCMC</h2>
+<p>Interacting MCMC allows chains to <strong>share information</strong> during sampling.</p>
+<p>Examples include:</p>
+<ul>
+<li>Information exchange about explored regions</li>
+<li>Proposals based on other chains’ states</li>
+<li>Heterogeneous stepping strategies</li>
+</ul>
+<p>(<em>See</em> <span class="citation" data-cites="geyermcmc1991"><a href="#/references" role="doc-biblioref" onclick="">[9]</a></span>; <span class="citation" data-cites="liu2001monte"><a href="#/references" role="doc-biblioref" onclick="">[10]</a></span>; <span class="citation" data-cites="brooks2011handbook"><a href="#/references" role="doc-biblioref" onclick="">[8]</a></span>)</p>
+<p><strong>Benefits:</strong></p>
+<ul>
+<li>Reduced mode trapping</li>
+<li>Improved exploration</li>
+<li>More stable parameter estimates</li>
+</ul>
+</section>
+<section id="the-hidden-problem" class="slide level2">
+<h2>The Hidden Problem</h2>
+<h3 id="parallel-execution-with-interaction">Parallel Execution with Interaction</h3>
+<p>Interacting MCMC requires coordination during execution.</p>
+<p><strong>However:</strong></p>
+<ul>
+<li>Synchronization depends on execution order</li>
+<li>Scheduling varies across hardware and thread counts</li>
+<li>Identical runs may follow different computational paths</li>
+</ul>
+</section>
+<section id="why-this-matters-for-finance" class="slide level2">
+<h2>Why This Matters for Finance</h2>
+<p>Portfolio and risk applications require:</p>
+<ul>
+<li>Reproducibility for auditability</li>
+<li>Deterministic reruns for stress testing</li>
+<li>Exact replication across environments</li>
+</ul>
+<blockquote>
+<p>Two runs with the same data and seed</p>
+<p><strong>should not produce different inferences</strong></p>
+</blockquote>
+</section>
+<section id="research-problem" class="slide level2">
+<h2>Research Problem</h2>
+<p><strong>Question:</strong> How can we run interacting, parallel MCMC algorithms such that:</p>
+<ol type="1">
+<li>Results are deterministic</li>
+<li>Runs are exactly reproducible</li>
+<li>Statistical guarantees remain unchanged</li>
+</ol>
+</section>
+<section id="key-challenge" class="slide level2">
+<h2>Key Challenge</h2>
+<ul>
+<li>Chains exchange information during inference</li>
+<li>Parallel execution introduces non-deterministic scheduling</li>
+<li>Standard RNGs are <strong>stateful</strong></li>
+</ul>
+<p>Stateful RNGs depend on:</p>
+<ul>
+<li>Number of previous draws</li>
+<li>Execution order</li>
+</ul>
+<p>In parallel MCMC, execution order varies, leading to different random draws and different results.</p>
+</section>
+<section id="stateful-random-number-generation" class="slide level2">
+<h2>Stateful Random Number Generation</h2>
+<p>A stateful RNG produces a deterministic sequence given a seed.</p>
+<ul>
+<li>States: <span class="math inline">\(s_0, s_1, s_2, \dots\)</span></li>
+<li>State update: <span class="math inline">\(s_{t+1} = h(s_t)\)</span></li>
+<li>Output: <span class="math inline">\(u_t = g(s_t)\)</span></li>
+</ul>
+<p>Example sequence:</p>
+<p><span class="math display">\[
+\text{seed} \to s_0 \to (s_1, u_0) \to (s_2, u_1) \to \dots
+\]</span></p>
+<p>(<em>See</em> <span class="citation" data-cites="knuth1997art"><a href="#/references" role="doc-biblioref" onclick="">[11]</a></span>; <span class="citation" data-cites="matsumoto1998mersenne"><a href="#/references" role="doc-biblioref" onclick="">[12]</a></span>)</p>
+</section>
+<section id="solution" class="slide level2">
+<h2>Solution</h2>
+<h3 id="stateless-random-number-generation">Stateless Random Number Generation</h3>
+<p>Generate randomness as a pure function of algorithmic context:</p>
+<p><span class="math display">\[
+u = f_{\text{RNG}}(\text{seed}, \text{chain ID}, \text{iteration}, \text{variable index})
+\]</span></p>
+<p>Random numbers depend only on their role in the algorithm, not on execution history.</p>
+<blockquote>
+<p><strong>Result:</strong> Bitwise-identical results across machines, thread counts, and execution orders.</p>
+</blockquote>
+</section>
+<section id="implementation" class="slide level2">
+<h2>Implementation</h2>
+<p><strong>Goal:</strong> Generate random numbers as a deterministic, one-to-one function of structured inputs.</p>
+<p>Each draw is keyed by:</p>
+<p><span class="math display">\[
+(\text{seed}, \text{chain ID}, \text{iteration}, \text{variable index})
+\]</span></p>
+<p>Each random draw is uniquely determined by its algorithmic role. (See <span class="citation" data-cites="syed2024nonreversible"><a href="#/references" role="doc-biblioref" onclick="">[13]</a></span>)</p>
+<p><strong>Example</strong></p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Chain ID</th>
+<th>Iteration</th>
+<th>Variable Index</th>
+<th>Key</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>10</td>
+<td>5</td>
+<td>(seed, 1, 10, 5)</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>10</td>
+<td>5</td>
+<td>(seed, 2, 10, 5)</td>
+</tr>
+<tr class="odd">
+<td>1</td>
+<td>11</td>
+<td>6</td>
+<td>(seed, 1, 11, 6)</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>11</td>
+<td>6</td>
+<td>(seed, 2, 11, 6)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section class="slide level2">
+
+<h3 id="hashing">Hashing</h3>
+<p><strong>Integer Mixing Permutations</strong></p>
+<ul>
+<li>Deterministic mappings over fixed-width integers</li>
+<li>Strong avalanche behavior</li>
+<li>Bijective over the supported key space</li>
+</ul>
+<p><span class="math display">\[
+u = f_{\text{RNG}}(h) = \text{mix}(h)
+\]</span></p>
+<p>Examples: SplitMix, MurmurHash, xxHash (<em>See</em> <span class="citation" data-cites="steele2014splitmix64"><a href="#/references" role="doc-biblioref" onclick="">[14]</a></span>; <span class="citation" data-cites="appleby2008murmurhash"><a href="#/references" role="doc-biblioref" onclick="">[15]</a></span>; <span class="citation" data-cites="collet2012xxhash"><a href="#/references" role="doc-biblioref" onclick="">[16]</a></span>)</p>
+</section>
+<section class="slide level2">
+
+<h3 id="full-implementation">Full Implementation</h3>
+<ol type="1">
+<li><p><strong>Key:</strong> for chain <span class="math inline">\(m\)</span>, iteration <span class="math inline">\(t\)</span>, index <span class="math inline">\(j\)</span> <span class="math display">\[
+k_{m,t,j} = (\text{seed}, m, t, j)
+\]</span></p></li>
+<li><p><strong>Encode to 64-bit integer:</strong> <span class="math inline">\(z_{m,t,j} = \text{encode}(k_{m,t,j})\)</span></p></li>
+<li><p><strong>Stateless RNG (integer mixing):</strong> <span class="math display">\[
+u_{m,t,j} = f_{\text{RNG}}(z_{m,t,j})
+         = \text{mix}_{64}(z_{m,t,j}),
+\qquad
+u_t^{(m)} = (u_{m,t,1}, \dots, u_{m,t,N_t^{(m)}})
+\]</span></p></li>
+<li><p><strong>MCMC update:</strong> <span class="math display">\[
+x_{t+1}^{(m)} = \Phi_m\!\big(x_t^{(m)},\, X_{-m}^{(t)},\, u_t^{(m)}\big)
+\]</span></p>
+<p>where:</p>
+<ul>
+<li><span class="math inline">\(\Phi_m\)</span>: update rule for chain <span class="math inline">\(m\)</span> (algorithm-specific, deterministic)</li>
+<li><span class="math inline">\(X_{-m}^{(t)}\)</span>: states of all other chains at iteration <span class="math inline">\(t\)</span> (communication)</li>
+<li><span class="math inline">\(u_t^{(m)}\)</span>: vector of random numbers used at iteration <span class="math inline">\(t\)</span></li>
+</ul></li>
+</ol>
+<p>(See <span class="citation" data-cites="syed2024nonreversible"><a href="#/references" role="doc-biblioref" onclick="">[13]</a></span> for details.)</p>
+</section>
+<section id="limitations-and-future-work" class="slide level2">
+<h2>Limitations and Future Work</h2>
+<p><strong>1. Explicit randomness required</strong></p>
+<ul>
+<li>Stateless RNG requires full control over all sources of randomness</li>
+<li>Not directly applicable to black-box solvers
+<ul>
+<li>e.g.&nbsp;an optimizer or sampler that internally draws random numbers (random initializations, line searches, or adaptive heuristics) without exposing those draws to the user</li>
+</ul></li>
+</ul>
+<p><strong>2. Deterministic communication only</strong></p>
+<ul>
+<li>Applies only when inter-chain communication is deterministic</li>
+<li>Examples of non-deterministic communication:
+<ul>
+<li>Random subsampling of chains
+<ul>
+<li>e.g.&nbsp;randomly selecting which chains exchange states at each iteration</li>
+</ul></li>
+<li>Stochastic aggregation
+<ul>
+<li>e.g.&nbsp;combining chain statistics using random weights or Monte Carlo estimates</li>
+</ul></li>
+<li>Uncorrected data-dependent resampling
+<ul>
+<li>e.g.&nbsp;resampling chains based on empirical performance without a fixed rule</li>
+</ul></li>
+</ul></li>
+</ul>
+</section>
+<section id="references" class="slide level2 smaller scrollable">
+<h2>References</h2>
+<div class="refs">
+
+
+</div>
+<div id="refs" class="references csl-bib-body" data-entry-spacing="0" role="list">
+<div id="ref-markowitz1952portfolio" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">H. Markowitz, <span>“Portfolio selection,”</span> <em>The Journal of Finance</em>, vol. 7, no. 1, pp. 77–91, 1952.</div>
+</div>
+<div id="ref-jobson1980estimation" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline">J. Jobson and B. Korkie, <span>“Estimation for markowitz efficient portfolios,”</span> <em>Journal of the American Statistical Association</em>, vol. 75, no. 371, pp. 544–554, 1980.</div>
+</div>
+<div id="ref-neal1993probabilistic" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline">R. M. Neal, <span>“Probabilistic inference using markov chain monte carlo methods,”</span> Technical Report, Dept. of Computer Science, University of Toronto, 1993.</div>
+</div>
+<div id="ref-robert2004monte" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline">C. P. Robert and G. Casella, <em>Monte carlo statistical methods</em>, 2nd ed. Springer, 2004.</div>
+</div>
+<div id="ref-metropolis1953equation" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[5] </div><div class="csl-right-inline">N. Metropolis, A. W. Rosenbluth, M. N. Rosenbluth, A. H. Teller, and E. Teller, <span>“Equation of state calculations by fast computing machines,”</span> <em>Journal of Chemical Physics</em>, vol. 21, no. 6, pp. 1087–1092, 1953.</div>
+</div>
+<div id="ref-hastings1970monte" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[6] </div><div class="csl-right-inline">W. K. Hastings, <span>“Monte carlo sampling methods using markov chains and their applications,”</span> <em>Biometrika</em>, vol. 57, no. 1, pp. 97–109, 1970.</div>
+</div>
+<div id="ref-gelman2013bayesian" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[7] </div><div class="csl-right-inline">A. Gelman, J. B. Carlin, H. S. Stern, D. B. Dunson, A. Vehtari, and D. B. Rubin, <em>Bayesian data analysis</em>, Third. Boca Raton, FL, USA: CRC Press, 2013.</div>
+</div>
+<div id="ref-brooks2011handbook" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[8] </div><div class="csl-right-inline">S. Brooks, A. Gelman, G. L. Jones, and X.-L. Meng, <em>Handbook of markov chain monte carlo</em>. CRC Press, 2011.</div>
+</div>
+<div id="ref-geyermcmc1991" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[9] </div><div class="csl-right-inline">C. J. Geyer, <span>“Markov chain monte carlo maximum likelihood,”</span> <em>Computing Science and Statistics: Proceedings of the 23rd Symposium on the Interface</em>, pp. 156–163, 1991.</div>
+</div>
+<div id="ref-liu2001monte" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[10] </div><div class="csl-right-inline">J. S. Liu, <em>Monte carlo strategies in scientific computing</em>. Springer, 2001.</div>
+</div>
+<div id="ref-knuth1997art" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[11] </div><div class="csl-right-inline">D. E. Knuth, <em>The art of computer programming, vol. 2: Seminumerical algorithms</em>. Addison-Wesley, 1997.</div>
+</div>
+<div id="ref-matsumoto1998mersenne" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[12] </div><div class="csl-right-inline">M. Matsumoto and T. Nishimura, <span>“Mersenne twister: A 623-dimensionally equidistributed uniform pseudorandom number generator,”</span> <em>ACM Transactions on Modeling and Computer Simulation (TOMACS)</em>, vol. 8, no. 1, pp. 3–30, 1998.</div>
+</div>
+<div id="ref-syed2024nonreversible" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[13] </div><div class="csl-right-inline">S. Syed, S. Nand, G. Deligiannidis, and A. Doucet, <span>“Non-reversible parallel tempering: An embarrassingly parallel MCMC scheme,”</span> <em>Journal of the Royal Statistical Society Series B</em>, vol. 84, no. 2, pp. 321–350, 2024, Available: <a href="https://sidnand.github.io/assets/pdfs/publications/non_reversible_pt.pdf">https://sidnand.github.io/assets/pdfs/publications/non_reversible_pt.pdf</a></div>
+</div>
+<div id="ref-steele2014splitmix64" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[14] </div><div class="csl-right-inline">G. L. Steele, <span>“SplitMix64: Fast pseudo-random number generator.”</span> 2014.</div>
+</div>
+<div id="ref-appleby2008murmurhash" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[15] </div><div class="csl-right-inline">A. Appleby, <span>“MurmurHash.”</span> 2008.</div>
+</div>
+<div id="ref-collet2012xxhash" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[16] </div><div class="csl-right-inline">Y. Collet, <span>“xxHash: Extremely fast hash algorithm.”</span> 2012.</div>
+</div>
+</div>
+</section>
+    </div>
+  <div class="quarto-auto-generated-content" style="display: none;">
+<div class="footer footer-default">
+
+</div>
+</div></div>
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script>
+  <script src="site_libs/revealjs/dist/reveal.js"></script>
+  <!-- reveal.js plugins -->
+  <script src="site_libs/revealjs/plugin/quarto-line-highlight/line-highlight.js"></script>
+  <script src="site_libs/revealjs/plugin/pdf-export/pdfexport.js"></script>
+  <script src="site_libs/revealjs/plugin/reveal-menu/menu.js"></script>
+  <script src="site_libs/revealjs/plugin/reveal-menu/quarto-menu.js"></script>
+  <script src="site_libs/revealjs/plugin/reveal-chalkboard/plugin.js"></script>
+  <script src="site_libs/revealjs/plugin/quarto-support/support.js"></script>
+  
+
+  <script src="site_libs/revealjs/plugin/notes/notes.js"></script>
+  <script src="site_libs/revealjs/plugin/search/search.js"></script>
+  <script src="site_libs/revealjs/plugin/zoom/zoom.js"></script>
+  <script src="site_libs/revealjs/plugin/math/math.js"></script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://revealjs.com/config/
+      Reveal.initialize({
+'controlsAuto': true,
+'previewLinksAuto': false,
+'pdfSeparateFragments': false,
+'autoAnimateEasing': "ease",
+'autoAnimateDuration': 1,
+'autoAnimateUnmatched': true,
+'jumpToSlide': true,
+'menu': {"side":"left","useTextContentForMissingTitles":true,"markers":false,"loadIcons":false,"custom":[{"title":"Tools","icon":"<i class=\"fas fa-gear\"></i>","content":"<ul class=\"slide-menu-items\">\n<li class=\"slide-tool-item active\" data-item=\"0\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.fullscreen(event)\"><kbd>f</kbd> Fullscreen</a></li>\n<li class=\"slide-tool-item\" data-item=\"1\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.speakerMode(event)\"><kbd>s</kbd> Speaker View</a></li>\n<li class=\"slide-tool-item\" data-item=\"2\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.overview(event)\"><kbd>o</kbd> Slide Overview</a></li>\n<li class=\"slide-tool-item\" data-item=\"3\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.togglePdfExport(event)\"><kbd>e</kbd> PDF Export Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"4\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleScrollView(event)\"><kbd>r</kbd> Scroll View Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"5\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleChalkboard(event)\"><kbd>b</kbd> Toggle Chalkboard</a></li>\n<li class=\"slide-tool-item\" data-item=\"6\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleNotesCanvas(event)\"><kbd>c</kbd> Toggle Notes Canvas</a></li>\n<li class=\"slide-tool-item\" data-item=\"7\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.downloadDrawings(event)\"><kbd>d</kbd> Download Drawings</a></li>\n<li class=\"slide-tool-item\" data-item=\"8\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.keyboardHelp(event)\"><kbd>?</kbd> Keyboard Help</a></li>\n</ul>"}],"openButton":true},
+'chalkboard': {"buttons":true},
+'smaller': false,
+ 
+        // Display controls in the bottom right corner
+        controls: false,
+
+        // Help the user learn the controls by providing hints, for example by
+        // bouncing the down arrow when they first encounter a vertical slide
+        controlsTutorial: false,
+
+        // Determines where controls appear, "edges" or "bottom-right"
+        controlsLayout: 'edges',
+
+        // Visibility rule for backwards navigation arrows; "faded", "hidden"
+        // or "visible"
+        controlsBackArrows: 'faded',
+
+        // Display a presentation progress bar
+        progress: true,
+
+        // Display the page number of the current slide
+        slideNumber: 'c/t',
+
+        // 'all', 'print', or 'speaker'
+        showSlideNumber: 'all',
+
+        // Add the current slide number to the URL hash so that reloading the
+        // page/copying the URL will return you to the same slide
+        hash: true,
+
+        // Start with 1 for the hash rather than 0
+        hashOneBasedIndex: false,
+
+        // Flags if we should monitor the hash and change slides accordingly
+        respondToHashChanges: true,
+
+        // Push each slide change to the browser history
+        history: true,
+
+        // Enable keyboard shortcuts for navigation
+        keyboard: true,
+
+        // Enable the slide overview mode
+        overview: true,
+
+        // Disables the default reveal.js slide layout (scaling and centering)
+        // so that you can use custom CSS layout
+        disableLayout: false,
+
+        // Vertical centering of slides
+        center: false,
+
+        // Enables touch navigation on devices with touch input
+        touch: true,
+
+        // Loop the presentation
+        loop: false,
+
+        // Change the presentation direction to be RTL
+        rtl: false,
+
+        // see https://revealjs.com/vertical-slides/#navigation-mode
+        navigationMode: 'linear',
+
+        // Randomizes the order of slides each time the presentation loads
+        shuffle: false,
+
+        // Turns fragments on and off globally
+        fragments: true,
+
+        // Flags whether to include the current fragment in the URL,
+        // so that reloading brings you to the same fragment position
+        fragmentInURL: false,
+
+        // Flags if the presentation is running in an embedded mode,
+        // i.e. contained within a limited portion of the screen
+        embedded: false,
+
+        // Flags if we should show a help overlay when the questionmark
+        // key is pressed
+        help: true,
+
+        // Flags if it should be possible to pause the presentation (blackout)
+        pause: true,
+
+        // Flags if speaker notes should be visible to all viewers
+        showNotes: false,
+
+        // Global override for autoplaying embedded media (null/true/false)
+        autoPlayMedia: null,
+
+        // Global override for preloading lazy-loaded iframes (null/true/false)
+        preloadIframes: null,
+
+        // Number of milliseconds between automatically proceeding to the
+        // next slide, disabled when set to 0, this value can be overwritten
+        // by using a data-autoslide attribute on your slides
+        autoSlide: 0,
+
+        // Stop auto-sliding after user input
+        autoSlideStoppable: true,
+
+        // Use this method for navigation when auto-sliding
+        autoSlideMethod: null,
+
+        // Specify the average time in seconds that you think you will spend
+        // presenting each slide. This is used to show a pacing timer in the
+        // speaker view
+        defaultTiming: null,
+
+        // Enable slide navigation via mouse wheel
+        mouseWheel: false,
+
+        // The display mode that will be used to show slides
+        display: 'block',
+
+        // Hide cursor if inactive
+        hideInactiveCursor: true,
+
+        // Time before the cursor is hidden (in ms)
+        hideCursorTime: 5000,
+
+        // Opens links in an iframe preview overlay
+        previewLinks: false,
+
+        // Transition style (none/fade/slide/convex/concave/zoom)
+        transition: 'none',
+
+        // Transition speed (default/fast/slow)
+        transitionSpeed: 'default',
+
+        // Transition style for full page slide backgrounds
+        // (none/fade/slide/convex/concave/zoom)
+        backgroundTransition: 'none',
+
+        // Number of slides away from the current that are visible
+        viewDistance: 3,
+
+        // Number of slides away from the current that are visible on mobile
+        // devices. It is advisable to set this to a lower number than
+        // viewDistance in order to save resources.
+        mobileViewDistance: 2,
+
+        // The "normal" size of the presentation, aspect ratio will be preserved
+        // when the presentation is scaled to fit different resolutions. Can be
+        // specified using percentage units.
+        width: 1050,
+
+        height: 700,
+
+        // Factor of the display size that should remain empty around the content
+        margin: 0.1,
+
+        math: {
+          mathjax: 'https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js',
+          config: 'TeX-AMS_HTML-full',
+          tex2jax: {
+            inlineMath: [['\\(','\\)']],
+            displayMath: [['\\[','\\]']],
+            balanceBraces: true,
+            processEscapes: false,
+            processRefs: true,
+            processEnvironments: true,
+            preview: 'TeX',
+            skipTags: ['script','noscript','style','textarea','pre','code'],
+            ignoreClass: 'tex2jax_ignore',
+            processClass: 'tex2jax_process'
+          },
+        },
+
+        // reveal.js plugins
+        plugins: [QuartoLineHighlight, PdfExport, RevealMenu, RevealChalkboard, QuartoSupport,
+
+          RevealMath,
+          RevealNotes,
+          RevealSearch,
+          RevealZoom
+        ]
+      });
+    </script>
+    <script id="quarto-html-after-body" type="application/javascript">
+      window.document.addEventListener("DOMContentLoaded", function (event) {
+        const tabsets =  window.document.querySelectorAll(".panel-tabset-tabby")
+        tabsets.forEach(function(tabset) {
+          const tabby = new Tabby('#' + tabset.id);
+        });
+        const isCodeAnnotation = (el) => {
+          for (const clz of el.classList) {
+            if (clz.startsWith('code-annotation-')) {                     
+              return true;
+            }
+          }
+          return false;
+        }
+        const onCopySuccess = function(e) {
+          // button target
+          const button = e.trigger;
+          // don't keep focus
+          button.blur();
+          // flash "checked"
+          button.classList.add('code-copy-button-checked');
+          var currentTitle = button.getAttribute("title");
+          button.setAttribute("title", "Copied!");
+          let tooltip;
+          if (window.bootstrap) {
+            button.setAttribute("data-bs-toggle", "tooltip");
+            button.setAttribute("data-bs-placement", "left");
+            button.setAttribute("data-bs-title", "Copied!");
+            tooltip = new bootstrap.Tooltip(button, 
+              { trigger: "manual", 
+                customClass: "code-copy-button-tooltip",
+                offset: [0, -8]});
+            tooltip.show();    
+          }
+          setTimeout(function() {
+            if (tooltip) {
+              tooltip.hide();
+              button.removeAttribute("data-bs-title");
+              button.removeAttribute("data-bs-toggle");
+              button.removeAttribute("data-bs-placement");
+            }
+            button.setAttribute("title", currentTitle);
+            button.classList.remove('code-copy-button-checked');
+          }, 1000);
+          // clear code selection
+          e.clearSelection();
+        }
+        const getTextToCopy = function(trigger) {
+          const outerScaffold = trigger.parentElement.cloneNode(true);
+          const codeEl = outerScaffold.querySelector('code');
+          for (const childEl of codeEl.children) {
+            if (isCodeAnnotation(childEl)) {
+              childEl.remove();
+            }
+          }
+          return codeEl.innerText;
+        }
+        const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+          text: getTextToCopy
+        });
+        clipboard.on('success', onCopySuccess);
+        if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+          const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+            text: getTextToCopy,
+            container: window.document.getElementById('quarto-embedded-source-code-modal')
+          });
+          clipboardModal.on('success', onCopySuccess);
+        }
+          var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+          var mailtoRegex = new RegExp(/^mailto:/);
+            var filterRegex = new RegExp('/' + window.location.host + '/');
+          var isInternal = (href) => {
+              return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+          }
+          // Inspect non-navigation links and adorn them if external
+         var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+          for (var i=0; i<links.length; i++) {
+            const link = links[i];
+            if (!isInternal(link.href)) {
+              // undo the damage that might have been done by quarto-nav.js in the case of
+              // links that we want to consider external
+              if (link.dataset.originalHref !== undefined) {
+                link.href = link.dataset.originalHref;
+              }
+            }
+          }
+        function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+          const config = {
+            allowHTML: true,
+            maxWidth: 500,
+            delay: 100,
+            arrow: false,
+            appendTo: function(el) {
+                return el.closest('section.slide') || el.parentElement;
+            },
+            interactive: true,
+            interactiveBorder: 10,
+            theme: 'light-border',
+            placement: 'bottom-start',
+          };
+          if (contentFn) {
+            config.content = contentFn;
+          }
+          if (onTriggerFn) {
+            config.onTrigger = onTriggerFn;
+          }
+          if (onUntriggerFn) {
+            config.onUntrigger = onUntriggerFn;
+          }
+            config['offset'] = [0,0];
+            config['maxWidth'] = 700;
+          window.tippy(el, config); 
+        }
+        const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+        for (var i=0; i<noterefs.length; i++) {
+          const ref = noterefs[i];
+          tippyHover(ref, function() {
+            // use id or data attribute instead here
+            let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+            try { href = new URL(href).hash; } catch {}
+            const id = href.replace(/^#\/?/, "");
+            const note = window.document.getElementById(id);
+            if (note) {
+              return note.innerHTML;
+            } else {
+              return "";
+            }
+          });
+        }
+        const findCites = (el) => {
+          const parentEl = el.parentElement;
+          if (parentEl) {
+            const cites = parentEl.dataset.cites;
+            if (cites) {
+              return {
+                el,
+                cites: cites.split(' ')
+              };
+            } else {
+              return findCites(el.parentElement)
+            }
+          } else {
+            return undefined;
+          }
+        };
+        var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+        for (var i=0; i<bibliorefs.length; i++) {
+          const ref = bibliorefs[i];
+          const citeInfo = findCites(ref);
+          if (citeInfo) {
+            tippyHover(citeInfo.el, function() {
+              var popup = window.document.createElement('div');
+              citeInfo.cites.forEach(function(cite) {
+                var citeDiv = window.document.createElement('div');
+                citeDiv.classList.add('hanging-indent');
+                citeDiv.classList.add('csl-entry');
+                var biblioDiv = window.document.getElementById('ref-' + cite);
+                if (biblioDiv) {
+                  citeDiv.innerHTML = biblioDiv.innerHTML;
+                }
+                popup.appendChild(citeDiv);
+              });
+              return popup.innerHTML;
+            });
+          }
+        }
+      });
+      </script>
+    
+
+</body></html>

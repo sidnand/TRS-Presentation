@@ -1,0 +1,425 @@
+---
+title: "Deterministic and Reproducible Parallel Markov-Chain Monte Carlo"
+subtitle: "With Applications to Portfolio Optimization"
+author: "Siddharth Nand"
+format:
+  revealjs:
+    theme: serif
+    slide-number: true
+    chalkboard: true
+    mathjax: true
+    css: styles.css
+bibliography: references.bib
+csl: ieee.csl
+link-citations: true
+execute:
+  echo: false
+
+---
+
+## A Reproducibility Problem in Parallel Inference
+
+- Modern decision systems rely on **simulation-based inference**  
+- To scale, we run **many simulations in parallel**, often with interaction  
+- In practice, **identical runs can produce different results**
+
+> Same data. Same code. Same random seed.
+> 
+> **Different outcomes.**
+
+---
+
+## Motivation: Portfolio Uncertainty Matters
+
+You manage a portfolio of $N$ assets.
+
+Let $\mathbf{r}_t = (r_{1}, \dots, r_{N})$ denote the vector of asset returns at time $t$.
+
+Using $T$ periods of historical data, we observe:
+$$
+\mathbf{Y} = \{\mathbf{r}_t\}_{t=1}^T \in \mathbb{R}^{T \times N}
+$$
+
+**Core question:**
+How uncertain are the inputs used for portfolio construction?
+
+---
+
+## Classical Mean–Variance Optimization
+
+Standard portfolio optimization solves:
+
+$$
+\max_{\mathbf{w}}
+\quad
+\mathbf{w}^\top \widehat{\boldsymbol{\mu}}
+-
+\frac{\gamma}{2}\,
+\mathbf{w}^\top \widehat{\boldsymbol{\Sigma}}\,\mathbf{w}
+$$
+
+(*Equation from* [@markowitz1952portfolio])
+
+* Uses point estimates $\widehat{\boldsymbol{\mu}}, \widehat{\boldsymbol{\Sigma}}$ [@jobson1980estimation]
+* Treats parameters as known constants
+
+**Issue:** Parameter uncertainty is ignored
+
+---
+
+## Bayesian View
+
+### Treat Parameters as Random Variables
+
+- Model parameters are uncertain and inferred from data  
+- The goal is to characterize **a joint distribution over parameters**
+
+$$
+\mathbf{r}_t \sim p(\mathbf{r}_t \mid \boldsymbol{\mu}, \boldsymbol{\Sigma}),
+\qquad
+(\boldsymbol{\mu}, \boldsymbol{\Sigma}) \sim p(\boldsymbol{\mu}, \boldsymbol{\Sigma})
+$$
+
+$$
+\boldsymbol{\Sigma} = \mathbf{D}\mathbf{C}\mathbf{D},
+\qquad
+\mathbf{D} = \mathrm{diag}(\sigma_1, \dots, \sigma_N)
+$$
+
+
+
+- $\mathbf{D}$: scales (volatilities)  
+- $\mathbf{C}$: correlation matrix
+
+**Inference state:**
+$x = (\boldsymbol{\mu}, \mathbf{D}, \mathbf{C})$
+
+---
+
+## From Modeling to Computation
+
+We seek the posterior distribution:
+
+$$
+\mathbb{P}(\boldsymbol{\mu}, \mathbf{D}, \mathbf{C} \mid \mathbf{Y})
+$$
+
+By Bayes’ theorem:
+
+$$
+\mathbb{P}(\boldsymbol{\mu}, \mathbf{D}, \mathbf{C} \mid \mathbf{Y}) =
+\frac{\mathbb{P}(\mathbf{Y} \mid \boldsymbol{\mu}, \mathbf{D}, \mathbf{C}),\mathbb{P}(\boldsymbol{\mu}, \mathbf{D}, \mathbf{C})}{\mathbb{P}(\mathbf{Y})}
+$$
+
+The marginal likelihood requires a high-dimensional integral:
+
+$$
+\mathbb{P}(\mathbf{Y}) = \int
+\mathbb{P}(\mathbf{Y} \mid \boldsymbol{\mu}, \mathbf{D}, \mathbf{C}),
+\mathbb{P}(\boldsymbol{\mu}, \mathbf{D}, \mathbf{C})
+, d\boldsymbol{\mu}, d\mathbf{D}, d\mathbf{C}
+$$
+
+> No closed-form solution
+> 
+> Dimension grows quickly with $N$
+
+(*See* @neal1993probabilistic; @robert2004monte)
+
+---
+
+## Markov-Chain Monte Carlo (MCMC)
+
+MCMC is a class of algorithms that generate samples from a posterior distribution.
+
+Define the unnormalized target density:
+
+$$
+\gamma(x) \equiv \mathbb{P}(\mathbf{Y} \mid x) \mathbb{P}(x),
+\quad
+x = (\boldsymbol{\mu}, \mathbf{D}, \mathbf{C})
+$$
+
+The normalizing constant is:
+
+$$
+Z = \mathbb{P}(\mathbf{Y}) = \int \gamma(x), dx
+$$
+
+Although $Z$ is unknown, we can compute relative posterior probabilities:
+
+$$
+\frac{\mathbb{P}(x' \mid \mathbf{Y})}{\mathbb{P}(x \mid \mathbf{Y})} = \frac{\gamma(x')}{\gamma(x)}
+$$
+
+Thus,
+
+$$
+\mathbb{P}(x \mid \mathbf{Y}) \propto \gamma(x)
+$$
+
+(*See* @neal1993probabilistic)
+
+---
+
+MCMC algorithms take samples:
+$$
+x^{(1)}, x^{(2)}, \dots, x^{(K)}
+$$
+
+from the unnormalized target density $\gamma(x)$
+
+All MCMC algorithms:
+
+- differ in their **randomized mechanisms** for proposing new samples
+- define a **Markov chain** whose stationary distribution is the target posterior
+
+**Examples:** Metropolis–Hastings, Gibbs, HMC
+
+(*See* @metropolis1953equation; @hastings1970monte)
+
+---
+
+## Why MCMC Is Expensive in Practice
+
+* **High-dimensional parameter space**
+  Even a small portfolio with $N=5$ assets has:
+
+  * 5 expected returns
+  * 5 volatilities
+  * 10 correlations
+    → **20 parameters**
+
+* **Complex posterior geometry**
+
+  * Multiple modes (e.g., volatility regimes)
+
+**Result:** Single chains make local moves, can get stuck, and yield unreliable uncertainty estimates.
+(*See* @gelman2013bayesian; @neal1993probabilistic)
+
+---
+
+## Parallel MCMC: The Industry Standard
+
+In practice, we run multiple chains in parallel:
+
+$$
+{ x_1^{(1:K)}, \dots, x_M^{(1:K)} }
+$$
+
+(*See* @gelman2013bayesian; @brooks2011handbook)
+
+Parallelism provides:
+
+* Faster computation
+* Better exploration via multiple initializations
+* Diagnostics (e.g., convergence checks)
+
+However, chains remain **independent**.
+
+> Parallel chains help, but independence limits exploration of complex posteriors.
+
+---
+
+## Interacting MCMC
+
+Interacting MCMC allows chains to **share information** during sampling.
+
+Examples include:
+
+* Information exchange about explored regions
+* Proposals based on other chains’ states
+* Heterogeneous stepping strategies
+
+(*See* @geyermcmc1991; @liu2001monte; @brooks2011handbook)
+
+**Benefits:**
+
+* Reduced mode trapping
+* Improved exploration
+* More stable parameter estimates
+
+---
+
+## The Hidden Problem
+
+### Parallel Execution with Interaction
+
+Interacting MCMC requires coordination during execution.
+
+**However:**
+
+* Synchronization depends on execution order
+* Scheduling varies across hardware and thread counts
+* Identical runs may follow different computational paths
+
+---
+
+## Why This Matters for Finance
+
+Portfolio and risk applications require:
+
+* Reproducibility for auditability
+* Deterministic reruns for stress testing
+* Exact replication across environments
+
+> Two runs with the same data and seed
+> 
+> **should not produce different inferences**
+
+---
+
+## Research Problem
+
+**Question:** How can we run interacting, parallel MCMC algorithms such that:
+
+1. Results are deterministic
+2. Runs are exactly reproducible
+3. Statistical guarantees remain unchanged
+
+---
+
+## Key Challenge
+
+* Chains exchange information during inference
+* Parallel execution introduces non-deterministic scheduling
+* Standard RNGs are **stateful**
+
+Stateful RNGs depend on:
+
+* Number of previous draws
+* Execution order
+
+In parallel MCMC, execution order varies, leading to different random draws and different results.
+
+---
+
+## Stateful Random Number Generation
+
+A stateful RNG produces a deterministic sequence given a seed.
+
+* States: $s_0, s_1, s_2, \dots$
+* State update: $s_{t+1} = h(s_t)$
+* Output: $u_t = g(s_t)$
+
+Example sequence:
+
+$$
+\text{seed} \to s_0 \to (s_1, u_0) \to (s_2, u_1) \to \dots
+$$
+
+(*See* @knuth1997art; @matsumoto1998mersenne)
+
+---
+
+## Solution
+
+### Stateless Random Number Generation
+
+Generate randomness as a pure function of algorithmic context:
+
+$$
+u = f_{\text{RNG}}(\text{seed}, \text{chain ID}, \text{iteration}, \text{variable index})
+$$
+
+Random numbers depend only on their role in the algorithm, not on execution history.
+
+> **Result:** Bitwise-identical results across machines, thread counts, and execution orders.
+
+---
+
+## Implementation
+
+**Goal:** Generate random numbers as a deterministic, one-to-one function of structured inputs.
+
+Each draw is keyed by:
+
+$$
+(\text{seed}, \text{chain ID}, \text{iteration}, \text{variable index})
+$$
+
+Each random draw is uniquely determined by its algorithmic role. (See @syed2024nonreversible)
+
+**Example**
+
+| Chain ID | Iteration | Variable Index | Key |
+|----------|-----------|----------------|-----|
+| 1        | 10        | 5              | (seed, 1, 10, 5) |
+| 2        | 10        | 5              | (seed, 2, 10, 5) |
+| 1        | 11        | 6              | (seed, 1, 11, 6) |
+| 2        | 11        | 6              | (seed, 2, 11, 6) |
+
+---
+
+### Hashing
+
+**Integer Mixing Permutations**
+
+* Deterministic mappings over fixed-width integers
+* Strong avalanche behavior
+* Bijective over the supported key space
+
+$$
+u = f_{\text{RNG}}(h) = \text{mix}(h)
+$$
+
+Examples: SplitMix, MurmurHash, xxHash
+(*See* @steele2014splitmix64; @appleby2008murmurhash; @collet2012xxhash)
+
+---
+
+### Full Implementation
+
+1. **Key:** for chain $m$, iteration $t$, index $j$
+   $$
+   k_{m,t,j} = (\text{seed}, m, t, j)
+   $$
+
+2. **Encode to 64-bit integer:** $z_{m,t,j} = \text{encode}(k_{m,t,j})$
+
+3. **Stateless RNG (integer mixing):**
+   $$
+   u_{m,t,j} = f_{\text{RNG}}(z_{m,t,j})
+            = \text{mix}_{64}(z_{m,t,j}),
+   \qquad
+   u_t^{(m)} = (u_{m,t,1}, \dots, u_{m,t,N_t^{(m)}})
+   $$
+
+4. **MCMC update:**
+   $$
+   x_{t+1}^{(m)} = \Phi_m\!\big(x_t^{(m)},\, X_{-m}^{(t)},\, u_t^{(m)}\big)
+   $$
+
+   where:
+
+   - $\Phi_m$: update rule for chain $m$ (algorithm-specific, deterministic)
+   - $X_{-m}^{(t)}$: states of all other chains at iteration $t$ (communication)
+   - $u_t^{(m)}$: vector of random numbers used at iteration $t$
+
+(See @syed2024nonreversible for details.)
+
+---
+
+## Limitations and Future Work
+
+**1. Explicit randomness required**
+
+* Stateless RNG requires full control over all sources of randomness
+* Not directly applicable to black-box solvers
+  * e.g. an optimizer or sampler that internally draws random numbers  (random initializations, line searches, or adaptive heuristics) without exposing those draws to the user
+
+**2. Deterministic communication only**
+
+* Applies only when inter-chain communication is deterministic
+* Examples of non-deterministic communication:
+  * Random subsampling of chains
+    * e.g. randomly selecting which chains exchange states at each iteration
+  * Stochastic aggregation
+    * e.g. combining chain statistics using random weights or Monte Carlo estimates
+  * Uncorrected data-dependent resampling
+    * e.g. resampling chains based on empirical performance without a fixed rule
+
+---
+
+## References
+::: refs :::

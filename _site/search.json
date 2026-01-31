@@ -1,0 +1,128 @@
+[
+  {
+    "objectID": "index.html#a-reproducibility-problem-in-parallel-inference",
+    "href": "index.html#a-reproducibility-problem-in-parallel-inference",
+    "title": "Deterministic and Reproducible Parallel Markov-Chain Monte Carlo",
+    "section": "A Reproducibility Problem in Parallel Inference",
+    "text": "A Reproducibility Problem in Parallel Inference\n\nModern decision systems rely on simulation-based inference\n\nTo scale, we run many simulations in parallel, often with interaction\n\nIn practice, identical runs can produce different results\n\n\nSame data. Same code. Same random seed.\nDifferent outcomes."
+  },
+  {
+    "objectID": "index.html#motivation-portfolio-uncertainty-matters",
+    "href": "index.html#motivation-portfolio-uncertainty-matters",
+    "title": "Deterministic and Reproducible Parallel Markov-Chain Monte Carlo",
+    "section": "Motivation: Portfolio Uncertainty Matters",
+    "text": "Motivation: Portfolio Uncertainty Matters\nYou manage a portfolio of \\(N\\) assets.\nLet \\(\\mathbf{r}_t = (r_{1}, \\dots, r_{N})\\) denote the vector of asset returns at time \\(t\\).\nUsing \\(T\\) periods of historical data, we observe: \\[\n\\mathbf{Y} = \\{\\mathbf{r}_t\\}_{t=1}^T \\in \\mathbb{R}^{T \\times N}\n\\]\nCore question: How uncertain are the inputs used for portfolio construction?"
+  },
+  {
+    "objectID": "index.html#classical-meanvariance-optimization",
+    "href": "index.html#classical-meanvariance-optimization",
+    "title": "Deterministic and Reproducible Parallel Markov-Chain Monte Carlo",
+    "section": "Classical Mean–Variance Optimization",
+    "text": "Classical Mean–Variance Optimization\nStandard portfolio optimization solves:\n\\[\n\\max_{\\mathbf{w}}\n\\quad\n\\mathbf{w}^\\top \\widehat{\\boldsymbol{\\mu}}\n-\n\\frac{\\gamma}{2}\\,\n\\mathbf{w}^\\top \\widehat{\\boldsymbol{\\Sigma}}\\,\\mathbf{w}\n\\]\n(Equation from [1])\n\nUses point estimates \\(\\widehat{\\boldsymbol{\\mu}}, \\widehat{\\boldsymbol{\\Sigma}}\\) [2]\nTreats parameters as known constants\n\nIssue: Parameter uncertainty is ignored"
+  },
+  {
+    "objectID": "index.html#bayesian-view",
+    "href": "index.html#bayesian-view",
+    "title": "Deterministic and Reproducible Parallel Markov-Chain Monte Carlo",
+    "section": "Bayesian View",
+    "text": "Bayesian View\nTreat Parameters as Random Variables\n\nModel parameters are uncertain and inferred from data\n\nThe goal is to characterize a joint distribution over parameters\n\n\\[\n\\mathbf{r}_t \\sim p(\\mathbf{r}_t \\mid \\boldsymbol{\\mu}, \\boldsymbol{\\Sigma}),\n\\qquad\n(\\boldsymbol{\\mu}, \\boldsymbol{\\Sigma}) \\sim p(\\boldsymbol{\\mu}, \\boldsymbol{\\Sigma})\n\\]\n\\[\n\\boldsymbol{\\Sigma} = \\mathbf{D}\\mathbf{C}\\mathbf{D},\n\\qquad\n\\mathbf{D} = \\mathrm{diag}(\\sigma_1, \\dots, \\sigma_N)\n\\]\n\n\\(\\mathbf{D}\\): scales (volatilities)\n\n\\(\\mathbf{C}\\): correlation matrix\n\nInference state: \\(x = (\\boldsymbol{\\mu}, \\mathbf{D}, \\mathbf{C})\\)"
+  },
+  {
+    "objectID": "index.html#from-modeling-to-computation",
+    "href": "index.html#from-modeling-to-computation",
+    "title": "Deterministic and Reproducible Parallel Markov-Chain Monte Carlo",
+    "section": "From Modeling to Computation",
+    "text": "From Modeling to Computation\nWe seek the posterior distribution:\n\\[\n\\mathbb{P}(\\boldsymbol{\\mu}, \\mathbf{D}, \\mathbf{C} \\mid \\mathbf{Y})\n\\]\nBy Bayes’ theorem:\n\\[\n\\mathbb{P}(\\boldsymbol{\\mu}, \\mathbf{D}, \\mathbf{C} \\mid \\mathbf{Y}) =\n\\frac{\\mathbb{P}(\\mathbf{Y} \\mid \\boldsymbol{\\mu}, \\mathbf{D}, \\mathbf{C}),\\mathbb{P}(\\boldsymbol{\\mu}, \\mathbf{D}, \\mathbf{C})}{\\mathbb{P}(\\mathbf{Y})}\n\\]\nThe marginal likelihood requires a high-dimensional integral:\n\\[\n\\mathbb{P}(\\mathbf{Y}) = \\int\n\\mathbb{P}(\\mathbf{Y} \\mid \\boldsymbol{\\mu}, \\mathbf{D}, \\mathbf{C}),\n\\mathbb{P}(\\boldsymbol{\\mu}, \\mathbf{D}, \\mathbf{C})\n, d\\boldsymbol{\\mu}, d\\mathbf{D}, d\\mathbf{C}\n\\]\n\nNo closed-form solution\nDimension grows quickly with \\(N\\)\n\n(See [3]; [4])"
+  },
+  {
+    "objectID": "index.html#markov-chain-monte-carlo-mcmc",
+    "href": "index.html#markov-chain-monte-carlo-mcmc",
+    "title": "Deterministic and Reproducible Parallel Markov-Chain Monte Carlo",
+    "section": "Markov-Chain Monte Carlo (MCMC)",
+    "text": "Markov-Chain Monte Carlo (MCMC)\nMCMC is a class of algorithms that generate samples from a posterior distribution.\nDefine the unnormalized target density:\n\\[\n\\gamma(x) \\equiv \\mathbb{P}(\\mathbf{Y} \\mid x) \\mathbb{P}(x),\n\\quad\nx = (\\boldsymbol{\\mu}, \\mathbf{D}, \\mathbf{C})\n\\]\nThe normalizing constant is:\n\\[\nZ = \\mathbb{P}(\\mathbf{Y}) = \\int \\gamma(x), dx\n\\]\nAlthough \\(Z\\) is unknown, we can compute relative posterior probabilities:\n\\[\n\\frac{\\mathbb{P}(x' \\mid \\mathbf{Y})}{\\mathbb{P}(x \\mid \\mathbf{Y})} = \\frac{\\gamma(x')}{\\gamma(x)}\n\\]\nThus,\n\\[\n\\mathbb{P}(x \\mid \\mathbf{Y}) \\propto \\gamma(x)\n\\]\n(See [3])"
+  },
+  {
+    "objectID": "index.html#why-mcmc-is-expensive-in-practice",
+    "href": "index.html#why-mcmc-is-expensive-in-practice",
+    "title": "Deterministic and Reproducible Parallel Markov-Chain Monte Carlo",
+    "section": "Why MCMC Is Expensive in Practice",
+    "text": "Why MCMC Is Expensive in Practice\n\nHigh-dimensional parameter space Even a small portfolio with \\(N=5\\) assets has:\n\n5 expected returns\n5 volatilities\n10 correlations → 20 parameters\n\nComplex posterior geometry\n\nMultiple modes (e.g., volatility regimes)\n\n\nResult: Single chains make local moves, can get stuck, and yield unreliable uncertainty estimates. (See [7]; [3])"
+  },
+  {
+    "objectID": "index.html#parallel-mcmc-the-industry-standard",
+    "href": "index.html#parallel-mcmc-the-industry-standard",
+    "title": "Deterministic and Reproducible Parallel Markov-Chain Monte Carlo",
+    "section": "Parallel MCMC: The Industry Standard",
+    "text": "Parallel MCMC: The Industry Standard\nIn practice, we run multiple chains in parallel:\n\\[\n{ x_1^{(1:K)}, \\dots, x_M^{(1:K)} }\n\\]\n(See [7]; [8])\nParallelism provides:\n\nFaster computation\nBetter exploration via multiple initializations\nDiagnostics (e.g., convergence checks)\n\nHowever, chains remain independent.\n\nParallel chains help, but independence limits exploration of complex posteriors."
+  },
+  {
+    "objectID": "index.html#interacting-mcmc",
+    "href": "index.html#interacting-mcmc",
+    "title": "Deterministic and Reproducible Parallel Markov-Chain Monte Carlo",
+    "section": "Interacting MCMC",
+    "text": "Interacting MCMC\nInteracting MCMC allows chains to share information during sampling.\nExamples include:\n\nInformation exchange about explored regions\nProposals based on other chains’ states\nHeterogeneous stepping strategies\n\n(See [9]; [10]; [8])\nBenefits:\n\nReduced mode trapping\nImproved exploration\nMore stable parameter estimates"
+  },
+  {
+    "objectID": "index.html#the-hidden-problem",
+    "href": "index.html#the-hidden-problem",
+    "title": "Deterministic and Reproducible Parallel Markov-Chain Monte Carlo",
+    "section": "The Hidden Problem",
+    "text": "The Hidden Problem\nParallel Execution with Interaction\nInteracting MCMC requires coordination during execution.\nHowever:\n\nSynchronization depends on execution order\nScheduling varies across hardware and thread counts\nIdentical runs may follow different computational paths"
+  },
+  {
+    "objectID": "index.html#why-this-matters-for-finance",
+    "href": "index.html#why-this-matters-for-finance",
+    "title": "Deterministic and Reproducible Parallel Markov-Chain Monte Carlo",
+    "section": "Why This Matters for Finance",
+    "text": "Why This Matters for Finance\nPortfolio and risk applications require:\n\nReproducibility for auditability\nDeterministic reruns for stress testing\nExact replication across environments\n\n\nTwo runs with the same data and seed\nshould not produce different inferences"
+  },
+  {
+    "objectID": "index.html#research-problem",
+    "href": "index.html#research-problem",
+    "title": "Deterministic and Reproducible Parallel Markov-Chain Monte Carlo",
+    "section": "Research Problem",
+    "text": "Research Problem\nQuestion: How can we run interacting, parallel MCMC algorithms such that:\n\nResults are deterministic\nRuns are exactly reproducible\nStatistical guarantees remain unchanged"
+  },
+  {
+    "objectID": "index.html#key-challenge",
+    "href": "index.html#key-challenge",
+    "title": "Deterministic and Reproducible Parallel Markov-Chain Monte Carlo",
+    "section": "Key Challenge",
+    "text": "Key Challenge\n\nChains exchange information during inference\nParallel execution introduces non-deterministic scheduling\nStandard RNGs are stateful\n\nStateful RNGs depend on:\n\nNumber of previous draws\nExecution order\n\nIn parallel MCMC, execution order varies, leading to different random draws and different results."
+  },
+  {
+    "objectID": "index.html#stateful-random-number-generation",
+    "href": "index.html#stateful-random-number-generation",
+    "title": "Deterministic and Reproducible Parallel Markov-Chain Monte Carlo",
+    "section": "Stateful Random Number Generation",
+    "text": "Stateful Random Number Generation\nA stateful RNG produces a deterministic sequence given a seed.\n\nStates: \\(s_0, s_1, s_2, \\dots\\)\nState update: \\(s_{t+1} = h(s_t)\\)\nOutput: \\(u_t = g(s_t)\\)\n\nExample sequence:\n\\[\n\\text{seed} \\to s_0 \\to (s_1, u_0) \\to (s_2, u_1) \\to \\dots\n\\]\n(See [11]; [12])"
+  },
+  {
+    "objectID": "index.html#solution",
+    "href": "index.html#solution",
+    "title": "Deterministic and Reproducible Parallel Markov-Chain Monte Carlo",
+    "section": "Solution",
+    "text": "Solution\nStateless Random Number Generation\nGenerate randomness as a pure function of algorithmic context:\n\\[\nu = f_{\\text{RNG}}(\\text{seed}, \\text{chain ID}, \\text{iteration}, \\text{variable index})\n\\]\nRandom numbers depend only on their role in the algorithm, not on execution history.\n\nResult: Bitwise-identical results across machines, thread counts, and execution orders."
+  },
+  {
+    "objectID": "index.html#implementation",
+    "href": "index.html#implementation",
+    "title": "Deterministic and Reproducible Parallel Markov-Chain Monte Carlo",
+    "section": "Implementation",
+    "text": "Implementation\nGoal: Generate random numbers as a deterministic, one-to-one function of structured inputs.\nEach draw is keyed by:\n\\[\n(\\text{seed}, \\text{chain ID}, \\text{iteration}, \\text{variable index})\n\\]\nEach random draw is uniquely determined by its algorithmic role. (See [13])\nExample\n\n\n\nChain ID\nIteration\nVariable Index\nKey\n\n\n\n\n1\n10\n5\n(seed, 1, 10, 5)\n\n\n2\n10\n5\n(seed, 2, 10, 5)\n\n\n1\n11\n6\n(seed, 1, 11, 6)\n\n\n2\n11\n6\n(seed, 2, 11, 6)"
+  },
+  {
+    "objectID": "index.html#limitations-and-future-work",
+    "href": "index.html#limitations-and-future-work",
+    "title": "Deterministic and Reproducible Parallel Markov-Chain Monte Carlo",
+    "section": "Limitations and Future Work",
+    "text": "Limitations and Future Work\n1. Explicit randomness required\n\nStateless RNG requires full control over all sources of randomness\nNot directly applicable to black-box solvers\n\ne.g. an optimizer or sampler that internally draws random numbers (random initializations, line searches, or adaptive heuristics) without exposing those draws to the user\n\n\n2. Deterministic communication only\n\nApplies only when inter-chain communication is deterministic\nExamples of non-deterministic communication:\n\nRandom subsampling of chains\n\ne.g. randomly selecting which chains exchange states at each iteration\n\nStochastic aggregation\n\ne.g. combining chain statistics using random weights or Monte Carlo estimates\n\nUncorrected data-dependent resampling\n\ne.g. resampling chains based on empirical performance without a fixed rule"
+  },
+  {
+    "objectID": "index.html#references",
+    "href": "index.html#references",
+    "title": "Deterministic and Reproducible Parallel Markov-Chain Monte Carlo",
+    "section": "References",
+    "text": "References\n\n\n\n\n\n\n[1] H. Markowitz, “Portfolio selection,” The Journal of Finance, vol. 7, no. 1, pp. 77–91, 1952.\n\n\n[2] J. Jobson and B. Korkie, “Estimation for markowitz efficient portfolios,” Journal of the American Statistical Association, vol. 75, no. 371, pp. 544–554, 1980.\n\n\n[3] R. M. Neal, “Probabilistic inference using markov chain monte carlo methods,” Technical Report, Dept. of Computer Science, University of Toronto, 1993.\n\n\n[4] C. P. Robert and G. Casella, Monte carlo statistical methods, 2nd ed. Springer, 2004.\n\n\n[5] N. Metropolis, A. W. Rosenbluth, M. N. Rosenbluth, A. H. Teller, and E. Teller, “Equation of state calculations by fast computing machines,” Journal of Chemical Physics, vol. 21, no. 6, pp. 1087–1092, 1953.\n\n\n[6] W. K. Hastings, “Monte carlo sampling methods using markov chains and their applications,” Biometrika, vol. 57, no. 1, pp. 97–109, 1970.\n\n\n[7] A. Gelman, J. B. Carlin, H. S. Stern, D. B. Dunson, A. Vehtari, and D. B. Rubin, Bayesian data analysis, Third. Boca Raton, FL, USA: CRC Press, 2013.\n\n\n[8] S. Brooks, A. Gelman, G. L. Jones, and X.-L. Meng, Handbook of markov chain monte carlo. CRC Press, 2011.\n\n\n[9] C. J. Geyer, “Markov chain monte carlo maximum likelihood,” Computing Science and Statistics: Proceedings of the 23rd Symposium on the Interface, pp. 156–163, 1991.\n\n\n[10] J. S. Liu, Monte carlo strategies in scientific computing. Springer, 2001.\n\n\n[11] D. E. Knuth, The art of computer programming, vol. 2: Seminumerical algorithms. Addison-Wesley, 1997.\n\n\n[12] M. Matsumoto and T. Nishimura, “Mersenne twister: A 623-dimensionally equidistributed uniform pseudorandom number generator,” ACM Transactions on Modeling and Computer Simulation (TOMACS), vol. 8, no. 1, pp. 3–30, 1998.\n\n\n[13] S. Syed, S. Nand, G. Deligiannidis, and A. Doucet, “Non-reversible parallel tempering: An embarrassingly parallel MCMC scheme,” Journal of the Royal Statistical Society Series B, vol. 84, no. 2, pp. 321–350, 2024, Available: https://sidnand.github.io/assets/pdfs/publications/non_reversible_pt.pdf\n\n\n[14] G. L. Steele, “SplitMix64: Fast pseudo-random number generator.” 2014.\n\n\n[15] A. Appleby, “MurmurHash.” 2008.\n\n\n[16] Y. Collet, “xxHash: Extremely fast hash algorithm.” 2012."
+  }
+]
