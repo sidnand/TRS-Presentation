@@ -166,13 +166,13 @@ All MCMC algorithms:
 - differ in their **randomized mechanisms** for proposing new states
 - define a **Markov chain** whose stationary distribution matches the target posterior
 
-**Examples:** Metropolis–Hastings, Gibbs, HMC
+**Examples:** Metropolis–Hastings, Gibbs, Hamiltonian Monte Carlo
 
 (*See* @metropolis1953equation; @hastings1970monte)
 
 ---
 
-## Why MCMC Is Expensive in Practice
+## Why MCMC is Expensive in Practice
 
 * **High-dimensional parameter space**
   Even a small portfolio with $N=5$ assets has:
@@ -191,7 +191,7 @@ All MCMC algorithms:
 
 ---
 
-## Parallel MCMC: The Industry Standard
+## Parallel MCMC: the Industry Standard
 
 In practice, we run multiple chains in parallel:
 
@@ -247,7 +247,7 @@ Interacting MCMC requires coordination during execution.
 
 ---
 
-## Why This Matters for Finance
+## Why this Matters for Finance
 
 Portfolio and risk applications require:
 
@@ -297,7 +297,7 @@ A stateful RNG produces a deterministic sequence given a seed.
 Example sequence:
 
 $$
-\text{seed} \to s_0 \to (s_1, u_0) \to (s_2, u_1) \to \dots
+\text{seed} \to s_0 \to (u_0, s_1) \to (u_1, s_2) \to \dots
 $$
 
 (*See* @knuth1997art; @matsumoto1998mersenne)
@@ -343,7 +343,7 @@ Each random draw is uniquely determined by its algorithmic role. (See @syed2024n
 
 ---
 
-### Hashing
+### Mixing Functions
 
 **Integer Mixing Permutations**
 
@@ -355,8 +355,8 @@ $$
 u = f_{\text{RNG}}(h) = \text{mix}(h)
 $$
 
-Examples: SplitMix, MurmurHash, xxHash
-(*See* @steele2014splitmix64; @appleby2008murmurhash; @collet2012xxhash)
+Examples: SplitMix
+(*See* @steele2014splitmix64)
 
 ---
 
@@ -385,7 +385,7 @@ Examples: SplitMix, MurmurHash, xxHash
    where:
 
    - $\Phi_m$: update rule for chain $m$ (algorithm-specific, deterministic)
-   - $X_{-m}^{(t)}$: states of all other chains at iteration $t$ (communication)
+   - $X_{-m}^{(t)}$: states of all other chains at iteration $t$ (interacting MCMC)
    - $u_t^{(m)}$: vector of random numbers used at iteration $t$
 
 (See @syed2024nonreversible for details.)

@@ -277,11 +277,11 @@ x^{(1)}, x^{(2)}, \dots, x^{(K)}
 <li>differ in their <strong>randomized mechanisms</strong> for proposing new states</li>
 <li>define a <strong>Markov chain</strong> whose stationary distribution matches the target posterior</li>
 </ul>
-<p><strong>Examples:</strong> Metropolis–Hastings, Gibbs, HMC</p>
+<p><strong>Examples:</strong> Metropolis–Hastings, Gibbs, Hamiltonian Monte Carlo</p>
 <p>(<em>See</em> <span class="citation" data-cites="metropolis1953equation"><a href="#/references" role="doc-biblioref" onclick="">[5]</a></span>; <span class="citation" data-cites="hastings1970monte"><a href="#/references" role="doc-biblioref" onclick="">[6]</a></span>)</p>
 </section>
 <section id="why-mcmc-is-expensive-in-practice" class="slide level2">
-<h2>Why MCMC Is Expensive in Practice</h2>
+<h2>Why MCMC is Expensive in Practice</h2>
 <ul>
 <li><p><strong>High-dimensional parameter space</strong> Even a small portfolio with <span class="math inline">\(N=5\)</span> assets has:</p>
 <ul>
@@ -297,7 +297,7 @@ x^{(1)}, x^{(2)}, \dots, x^{(K)}
 <p><strong>Result:</strong> Single chains make local moves, can get stuck, and yield unreliable uncertainty estimates. (<em>See</em> <span class="citation" data-cites="gelman2013bayesian"><a href="#/references" role="doc-biblioref" onclick="">[7]</a></span>; <span class="citation" data-cites="neal1993probabilistic"><a href="#/references" role="doc-biblioref" onclick="">[3]</a></span>)</p>
 </section>
 <section id="parallel-mcmc-the-industry-standard" class="slide level2">
-<h2>Parallel MCMC: The Industry Standard</h2>
+<h2>Parallel MCMC: the Industry Standard</h2>
 <p>In practice, we run multiple chains in parallel:</p>
 <p><span class="math display">\[
 { x_1^{(1:K)}, \dots, x_M^{(1:K)} }
@@ -343,7 +343,7 @@ x^{(1)}, x^{(2)}, \dots, x^{(K)}
 </ul>
 </section>
 <section id="why-this-matters-for-finance" class="slide level2">
-<h2>Why This Matters for Finance</h2>
+<h2>Why this Matters for Finance</h2>
 <p>Portfolio and risk applications require:</p>
 <ul>
 <li>Reproducibility for auditability</li>
@@ -388,7 +388,7 @@ x^{(1)}, x^{(2)}, \dots, x^{(K)}
 </ul>
 <p>Example sequence:</p>
 <p><span class="math display">\[
-\text{seed} \to s_0 \to (s_1, u_0) \to (s_2, u_1) \to \dots
+\text{seed} \to s_0 \to (u_0, s_1) \to (u_1, s_2) \to \dots
 \]</span></p>
 <p>(<em>See</em> <span class="citation" data-cites="knuth1997art"><a href="#/references" role="doc-biblioref" onclick="">[11]</a></span>; <span class="citation" data-cites="matsumoto1998mersenne"><a href="#/references" role="doc-biblioref" onclick="">[12]</a></span>)</p>
 </section>
@@ -452,7 +452,7 @@ u = f_{\text{RNG}}(\text{seed}, \text{chain ID}, \text{iteration}, \text{variabl
 </section>
 <section class="slide level2">
 
-<h3 id="hashing">Hashing</h3>
+<h3 id="mixing-functions">Mixing Functions</h3>
 <p><strong>Integer Mixing Permutations</strong></p>
 <ul>
 <li>Deterministic mappings over fixed-width integers</li>
@@ -462,7 +462,7 @@ u = f_{\text{RNG}}(\text{seed}, \text{chain ID}, \text{iteration}, \text{variabl
 <p><span class="math display">\[
 u = f_{\text{RNG}}(h) = \text{mix}(h)
 \]</span></p>
-<p>Examples: SplitMix, MurmurHash, xxHash (<em>See</em> <span class="citation" data-cites="steele2014splitmix64"><a href="#/references" role="doc-biblioref" onclick="">[14]</a></span>; <span class="citation" data-cites="appleby2008murmurhash"><a href="#/references" role="doc-biblioref" onclick="">[15]</a></span>; <span class="citation" data-cites="collet2012xxhash"><a href="#/references" role="doc-biblioref" onclick="">[16]</a></span>)</p>
+<p>Examples: SplitMix (<em>See</em> <span class="citation" data-cites="steele2014splitmix64"><a href="#/references" role="doc-biblioref" onclick="">[14]</a></span>)</p>
 </section>
 <section class="slide level2">
 
@@ -484,7 +484,7 @@ x_{t+1}^{(m)} = \Phi_m\!\big(x_t^{(m)},\, X_{-m}^{(t)},\, u_t^{(m)}\big)
 <p>where:</p>
 <ul>
 <li><span class="math inline">\(\Phi_m\)</span>: update rule for chain <span class="math inline">\(m\)</span> (algorithm-specific, deterministic)</li>
-<li><span class="math inline">\(X_{-m}^{(t)}\)</span>: states of all other chains at iteration <span class="math inline">\(t\)</span> (communication)</li>
+<li><span class="math inline">\(X_{-m}^{(t)}\)</span>: states of all other chains at iteration <span class="math inline">\(t\)</span> (interacting MCMC)</li>
 <li><span class="math inline">\(u_t^{(m)}\)</span>: vector of random numbers used at iteration <span class="math inline">\(t\)</span></li>
 </ul></li>
 </ol>
@@ -564,12 +564,6 @@ x_{t+1}^{(m)} = \Phi_m\!\big(x_t^{(m)},\, X_{-m}^{(t)},\, u_t^{(m)}\big)
 </div>
 <div id="ref-steele2014splitmix64" class="csl-entry" role="listitem">
 <div class="csl-left-margin">[14] </div><div class="csl-right-inline">G. L. Steele, <span>“SplitMix64: Fast pseudo-random number generator.”</span> 2014.</div>
-</div>
-<div id="ref-appleby2008murmurhash" class="csl-entry" role="listitem">
-<div class="csl-left-margin">[15] </div><div class="csl-right-inline">A. Appleby, <span>“MurmurHash.”</span> 2008.</div>
-</div>
-<div id="ref-collet2012xxhash" class="csl-entry" role="listitem">
-<div class="csl-left-margin">[16] </div><div class="csl-right-inline">Y. Collet, <span>“xxHash: Extremely fast hash algorithm.”</span> 2012.</div>
 </div>
 </div>
 </section>
