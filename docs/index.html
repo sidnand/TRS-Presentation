@@ -10,7 +10,7 @@
   <meta name="generator" content="quarto-1.8.27">
 
   <meta name="author" content="Siddharth Nand">
-  <title>Deterministic and Reproducible Parallel Markov-Chain Monte Carlo</title>
+  <title>Reproducible Parallel Markov-Chain Monte Carlo</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
@@ -150,7 +150,7 @@
     <div class="slides">
 
 <section id="title-slide" class="quarto-title-block center">
-  <h1 class="title">Deterministic and Reproducible Parallel Markov-Chain Monte Carlo</h1>
+  <h1 class="title">Reproducible Parallel Markov-Chain Monte Carlo</h1>
   <p class="subtitle">With Applications to Portfolio Optimization</p>
 
 <div class="quarto-title-authors">
@@ -162,28 +162,19 @@ Siddharth Nand
 </div>
 
 </section>
-<section id="a-reproducibility-problem-in-parallel-inference" class="slide level2">
-<h2>A Reproducibility Problem in Parallel Inference</h2>
-<ul>
-<li>Modern decision systems rely on <strong>simulation-based inference</strong><br>
-</li>
-<li>To scale, we run <strong>many simulations in parallel</strong>, often with interaction<br>
-</li>
-<li>In practice, <strong>identical runs can produce different results</strong></li>
-</ul>
-<blockquote>
-<p>Same data. Same code. Same random seed.</p>
-<p><strong>Different outcomes.</strong></p>
-</blockquote>
-</section>
-<section id="motivation-portfolio-uncertainty-matters" class="slide level2">
-<h2>Motivation: Portfolio Uncertainty Matters</h2>
+<section id="motivation-inference-in-portfolio-optimization" class="slide level2">
+<h2>Motivation: Inference in Portfolio Optimization</h2>
 <p>You manage a portfolio of <span class="math inline">\(N\)</span> assets.</p>
 <p>Let <span class="math inline">\(\mathbf{r}_t = (r_{1}, \dots, r_{N})\)</span> denote the vector of asset returns at time <span class="math inline">\(t\)</span>.</p>
 <p>Using <span class="math inline">\(T\)</span> periods of historical data, we observe: <span class="math display">\[
 \mathbf{Y} = \{\mathbf{r}_t\}_{t=1}^T \in \mathbb{R}^{T \times N}
 \]</span></p>
-<p><strong>Core question:</strong> How uncertain are the inputs used for portfolio construction?</p>
+<p>we infer the inputs used for portfolio construction: <span class="math display">\[
+\boldsymbol{\mu} \;=\; \mathbb{E}[\mathbf{r}_t],
+\qquad
+\boldsymbol{\Sigma} \;=\; \mathrm{Cov}(\mathbf{r}_t).
+\]</span></p>
+<p><strong>Core question:</strong> How uncertain are these inferred inputs?</p>
 </section>
 <section id="classical-meanvariance-optimization" class="slide level2">
 <h2>Classical Mean–Variance Optimization</h2>
@@ -503,15 +494,16 @@ x_{t+1}^{(m)} = \Phi_m\!\big(x_t^{(m)},\, X_{-m}^{(t)},\, u_t^{(m)}\big)
 </section>
 <section id="limitations-and-future-work" class="slide level2">
 <h2>Limitations and Future Work</h2>
-<p><strong>1. Explicit randomness required</strong></p>
+<p><strong>1. Explicit randomness required (no hidden RNG)</strong></p>
 <ul>
-<li>Stateless RNG requires full control over all sources of randomness</li>
-<li>Not directly applicable to black-box solvers
+<li>All randomness must be: explicitly generated, indexed, and under your control.</li>
+<li>Doesn’t work for:
 <ul>
-<li>e.g.&nbsp;an optimizer or sampler that internally draws random numbers (random initializations, line searches, or adaptive heuristics) without exposing those draws to the user</li>
+<li>Implicit randomness (e.g., library calls that use internal RNGs)</li>
+<li>External processes (e.g., calls to black-box simulators)</li>
 </ul></li>
 </ul>
-<p><strong>2. Deterministic communication only</strong></p>
+<p><strong>2. Deterministic communication only (no randomness in control flow)</strong></p>
 <ul>
 <li>Applies only when inter-chain communication is deterministic</li>
 <li>Examples of non-deterministic communication:

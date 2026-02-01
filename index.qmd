@@ -1,5 +1,5 @@
 ---
-title: "Deterministic and Reproducible Parallel Markov-Chain Monte Carlo"
+title: "Reproducible Parallel Markov-Chain Monte Carlo"
 subtitle: "With Applications to Portfolio Optimization"
 author: "Siddharth Nand"
 format:
@@ -17,19 +17,7 @@ execute:
 
 ---
 
-## A Reproducibility Problem in Parallel Inference
-
-- Modern decision systems rely on **simulation-based inference**  
-- To scale, we run **many simulations in parallel**, often with interaction  
-- In practice, **identical runs can produce different results**
-
-> Same data. Same code. Same random seed.
-> 
-> **Different outcomes.**
-
----
-
-## Motivation: Portfolio Uncertainty Matters
+## Motivation: Inference in Portfolio Optimization
 
 You manage a portfolio of $N$ assets.
 
@@ -40,8 +28,14 @@ $$
 \mathbf{Y} = \{\mathbf{r}_t\}_{t=1}^T \in \mathbb{R}^{T \times N}
 $$
 
-**Core question:**
-How uncertain are the inputs used for portfolio construction?
+we infer the inputs used for portfolio construction:
+$$
+\boldsymbol{\mu} \;=\; \mathbb{E}[\mathbf{r}_t],
+\qquad
+\boldsymbol{\Sigma} \;=\; \mathrm{Cov}(\mathbf{r}_t).
+$$
+
+**Core question:** How uncertain are these inferred inputs?
 
 ---
 
@@ -405,13 +399,14 @@ Examples: SplitMix, MurmurHash, xxHash
 
 ## Limitations and Future Work
 
-**1. Explicit randomness required**
+**1. Explicit randomness required (no hidden RNG)**
 
-* Stateless RNG requires full control over all sources of randomness
-* Not directly applicable to black-box solvers
-  * e.g. an optimizer or sampler that internally draws random numbers  (random initializations, line searches, or adaptive heuristics) without exposing those draws to the user
+* All randomness must be: explicitly generated, indexed, and under your control.
+* Doesn't work for:
+  * Implicit randomness (e.g., library calls that use internal RNGs)
+  * External processes (e.g., calls to black-box simulators)
 
-**2. Deterministic communication only**
+**2. Deterministic communication only (no randomness in control flow)**
 
 * Applies only when inter-chain communication is deterministic
 * Examples of non-deterministic communication:
