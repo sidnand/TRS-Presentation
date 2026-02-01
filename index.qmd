@@ -137,7 +137,7 @@ $$
 The normalizing constant is:
 
 $$
-Z = \mathbb{P}(\mathbf{Y}) = \int \gamma(x), dx
+Z = \mathbb{P}(\mathbf{Y}) = \int \gamma(x) dx
 $$
 
 Although $Z$ is unknown, we can compute relative posterior probabilities:
