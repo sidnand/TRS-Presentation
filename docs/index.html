@@ -233,9 +233,8 @@ Siddharth Nand
 <p>The marginal likelihood requires a high-dimensional integral:</p>
 <p><span class="math display">\[
 \mathbb{P}(\mathbf{Y}) = \int
-\mathbb{P}(\mathbf{Y} \mid \boldsymbol{\mu}, \mathbf{D}, \mathbf{C}),
-\mathbb{P}(\boldsymbol{\mu}, \mathbf{D}, \mathbf{C})
-, d\boldsymbol{\mu}, d\mathbf{D}, d\mathbf{C}
+\mathbb{P}(\mathbf{Y} \mid \boldsymbol{\mu}, \mathbf{D}, \mathbf{C}) \mathbb{P}(\boldsymbol{\mu}, \mathbf{D}, \mathbf{C})
+\ d\boldsymbol{\mu} \ d\mathbf{D} \ d\mathbf{C}
 \]</span></p>
 <blockquote>
 <p>No closed-form solution</p>
@@ -254,16 +253,15 @@ x = (\boldsymbol{\mu}, \mathbf{D}, \mathbf{C})
 \]</span></p>
 <p>The normalizing constant is:</p>
 <p><span class="math display">\[
-Z = \mathbb{P}(\mathbf{Y}) = \int \gamma(x) dx
+Z = \mathbb{P}(\mathbf{Y}) = \int \gamma(x) \ dx
 \]</span></p>
-<p>Although <span class="math inline">\(Z\)</span> is unknown, we can compute relative posterior probabilities:</p>
+<p>Although <span class="math inline">\(Z\)</span> is unknown, we can compute relative posterior densities:</p>
 <p><span class="math display">\[
 \frac{\mathbb{P}(x' \mid \mathbf{Y})}{\mathbb{P}(x \mid \mathbf{Y})} = \frac{\gamma(x')}{\gamma(x)}
 \]</span></p>
-<p>Thus,</p>
-<p><span class="math display">\[
-\mathbb{P}(x \mid \mathbf{Y}) \propto \gamma(x)
-\]</span></p>
+<blockquote>
+<p>How much more (or less) posterior density the model assigns to <span class="math inline">\(x'\)</span> versus <span class="math inline">\(x\)</span>.</p>
+</blockquote>
 <p>(<em>See</em> <span class="citation" data-cites="neal1993probabilistic"><a href="#/references" role="doc-biblioref" onclick="">[3]</a></span>)</p>
 </section>
 <section class="slide level2">
@@ -271,13 +269,13 @@ Z = \mathbb{P}(\mathbf{Y}) = \int \gamma(x) dx
 <p>MCMC algorithms generate a Markov chain with states: <span class="math display">\[
 x^{(1)}, x^{(2)}, \dots, x^{(K)}
 \]</span></p>
-<p>which (after burn-in) are treated as samples from the target distribution <span class="math display">\[
+<p>which (once the chain has converged) are treated as samples from the target distribution <span class="math display">\[
 \mathbb{P}(x \mid \mathbf{Y}) \propto \gamma(x).
 \]</span></p>
 <p>All MCMC algorithms:</p>
 <ul>
-<li>differ in their <strong>randomized mechanisms</strong> for proposing new samples</li>
-<li>define a <strong>Markov chain</strong> whose stationary distribution is the target posterior</li>
+<li>differ in their <strong>randomized mechanisms</strong> for proposing new states</li>
+<li>define a <strong>Markov chain</strong> whose stationary distribution matches the target posterior</li>
 </ul>
 <p><strong>Examples:</strong> Metropolis–Hastings, Gibbs, HMC</p>
 <p>(<em>See</em> <span class="citation" data-cites="metropolis1953equation"><a href="#/references" role="doc-biblioref" onclick="">[5]</a></span>; <span class="citation" data-cites="hastings1970monte"><a href="#/references" role="doc-biblioref" onclick="">[6]</a></span>)</p>

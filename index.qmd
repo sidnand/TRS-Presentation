@@ -109,9 +109,8 @@ The marginal likelihood requires a high-dimensional integral:
 
 $$
 \mathbb{P}(\mathbf{Y}) = \int
-\mathbb{P}(\mathbf{Y} \mid \boldsymbol{\mu}, \mathbf{D}, \mathbf{C}),
-\mathbb{P}(\boldsymbol{\mu}, \mathbf{D}, \mathbf{C})
-, d\boldsymbol{\mu}, d\mathbf{D}, d\mathbf{C}
+\mathbb{P}(\mathbf{Y} \mid \boldsymbol{\mu}, \mathbf{D}, \mathbf{C}) \mathbb{P}(\boldsymbol{\mu}, \mathbf{D}, \mathbf{C})
+\ d\boldsymbol{\mu} \ d\mathbf{D} \ d\mathbf{C}
 $$
 
 > No closed-form solution
@@ -137,20 +136,16 @@ $$
 The normalizing constant is:
 
 $$
-Z = \mathbb{P}(\mathbf{Y}) = \int \gamma(x) dx
+Z = \mathbb{P}(\mathbf{Y}) = \int \gamma(x) \ dx
 $$
 
-Although $Z$ is unknown, we can compute relative posterior probabilities:
+Although $Z$ is unknown, we can compute relative posterior densities:
 
 $$
 \frac{\mathbb{P}(x' \mid \mathbf{Y})}{\mathbb{P}(x \mid \mathbf{Y})} = \frac{\gamma(x')}{\gamma(x)}
 $$
 
-Thus,
-
-$$
-\mathbb{P}(x \mid \mathbf{Y}) \propto \gamma(x)
-$$
+> How much more (or less) posterior density the model assigns to $x'$ versus $x$.
 
 (*See* @neal1993probabilistic)
 
@@ -161,15 +156,15 @@ $$
 x^{(1)}, x^{(2)}, \dots, x^{(K)}
 $$
 
-which (after burn-in) are treated as samples from the target distribution
+which (once the chain has converged) are treated as samples from the target distribution
 $$
 \mathbb{P}(x \mid \mathbf{Y}) \propto \gamma(x).
 $$
 
 All MCMC algorithms:
 
-- differ in their **randomized mechanisms** for proposing new samples
-- define a **Markov chain** whose stationary distribution is the target posterior
+- differ in their **randomized mechanisms** for proposing new states
+- define a **Markov chain** whose stationary distribution matches the target posterior
 
 **Examples:** Metropolis–Hastings, Gibbs, HMC
 
